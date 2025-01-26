@@ -1,34 +1,30 @@
 import pygame
+import pytmx
 
-WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 480, 480
-FPS = 15
+WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 1530, 1515
+FPS = 30
 MAPS_DIR = "maps"
-TILE_SIZE = 32
+TILE_SIZE = 101
 ENEMY_EVENT_TYPE = 30
 
 
 class Labyrinth:
     def __init__(self, filename, free_tile, finis_tile):
-        self.map = []
-        with open(f"{filename}") as input_file:
-            for line in input_file:
-                self.map.append(list(map(int, line.split())))
-        self.height = len(self.map)
-        self.width = len(self.map[0])
-        self.tile_size = TILE_SIZE
+        self.map = pytmx.load_pygame(f'{filename}')
+        self.height = self.map.height
+        self.width = self.map.width
+        self.tile_size = self.map.tilewidth
         self.free_tiles = free_tile
         self.finish_tile = finis_tile
 
     def render(self, screen):
-        colors = {0: (0, 0, 0), 1: (120, 120, 120), 2: (50, 50, 50)}
         for y in range(self.height):
             for x in range(self.width):
-                rect = pygame.Rect(x * self.tile_size, y * self.tile_size,
-                                   self.tile_size, self.tile_size)
-                screen.fill(colors[self.get_tile_id((x, y))], rect)
+                image = self.map.get_tile_image(x, y, 0)
+                screen.blit(image, (x * self.tile_size, y * self.tile_size))
 
     def get_tile_id(self, position):
-        return self.map[position[1]][position[0]]
+        return self.map.tiledgidmap[self.map.get_tile_gid(*position, 0)]
 
     def is_free(self, position):
         return self.get_tile_id(position) in self.free_tiles
@@ -77,7 +73,7 @@ class Enemy:
 
     def __init__(self, position):
         self.x, self.y = position
-        self.delay = 100
+        self.delay = 10000
         pygame.time.set_timer(ENEMY_EVENT_TYPE, self.delay)
 
     def get_position(self):
@@ -138,13 +134,16 @@ def show_message(screen, message):
                                               text_w + 20, text_h + 20))
     screen.blit(text, (text_x, text_y))
 
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
 
-    labyrinth = Labyrinth("/Users/vladimirmalysev/PycharmProjects/labyrinth1/maps/first_map.txt", [0, 2], 2)
-    hero = Hero((7, 7))
-    enemy = Enemy((7, 1))
+    labyrinth = Labyrinth("/Users/vladimirmalysev/PycharmProjects/labyrinth1/maps/map_farm.tmx",
+                          [1, 2, 3, 10, 12, 14, 19, 20, 21, 15],
+                          15)
+    hero = Hero((6, 3))
+    enemy = Enemy((10, 1))
     game = Game(labyrinth, hero, enemy)
 
     clock = pygame.time.Clock()
