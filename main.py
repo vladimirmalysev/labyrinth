@@ -7,7 +7,7 @@ import math
 pygame.init()
 
 # Размеры окна
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1050, 650
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Лабиринт")
 
@@ -23,9 +23,24 @@ GRAY = (169, 169, 169)
 # Кадровая частота
 FPS = 60
 clock = pygame.time.Clock()
-
+TILE_SIZE = 50
 # Шрифты
 FONT = pygame.font.Font(None, 36)
+# Загрузка текстур
+WALL_TEXTURE = pygame.image.load("wall_texture.png")
+WALL_TEXTURE = pygame.transform.scale(WALL_TEXTURE, (TILE_SIZE, TILE_SIZE))
+ROAD_TEXTURE = pygame.image.load("road_texture.png")
+ROAD_TEXTURE = pygame.transform.scale(ROAD_TEXTURE, (TILE_SIZE, TILE_SIZE))
+ENEMY_TEXTURE = pygame.image.load("monster.png").convert_alpha()
+ENEMY_TEXTURE = pygame.transform.scale(ENEMY_TEXTURE, (40, 40))  # Масштабируем текстуру до 40x40
+PLAYER_TEXTURE1 = pygame.image.load("player1.png")
+PLAYER_TEXTURE1 = pygame.transform.scale(PLAYER_TEXTURE1, (40, 40))
+PLAYER_TEXTURE2 = pygame.image.load("player2(robin).png")
+PLAYER_TEXTURE2 = pygame.transform.scale(PLAYER_TEXTURE2, (40, 40))
+PLAYER_TEXTURE3 = pygame.image.load("player3(moustache).png")
+PLAYER_TEXTURE3 = pygame.transform.scale(PLAYER_TEXTURE3, (40, 40))
+TREASURE_TEXTURE = pygame.image.load("treasure.png").convert_alpha()
+TREASURE_TEXTURE = pygame.transform.scale(TREASURE_TEXTURE, (40, 40))
 
 # Спрайты персонажей
 CHARACTERS = [
@@ -33,14 +48,13 @@ CHARACTERS = [
     pygame.Surface((40, 40)),
     pygame.Surface((40, 40))
 ]
-CHARACTERS[0].fill(RED)
-CHARACTERS[1].fill(BLUE)
-CHARACTERS[2].fill(GREEN)
+CHARACTERS[0] = PLAYER_TEXTURE1
+CHARACTERS[1] = PLAYER_TEXTURE2
+CHARACTERS[2] = PLAYER_TEXTURE3
 
 # Лабиринт
-TILE_SIZE = 50
 MAZE = [
-    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWWW",
     "W     W       W     W",
     "W WWW WWWWW W W WWW W",
     "W W         W W W   W",
@@ -52,16 +66,8 @@ MAZE = [
     "W   W W     W W   W W",
     "W WWWWWWW W W WWWWW W",
     "W         W W       W",
-    "WWWWWWWWWWWWWWWWWWWW"
+    "WWWWWWWWWWWWWWWWWWWWW"
 ]
-
-# Загрузка текстур
-WALL_TEXTURE = pygame.image.load("wall_texture.png")
-WALL_TEXTURE = pygame.transform.scale(WALL_TEXTURE, (TILE_SIZE, TILE_SIZE))
-ROAD_TEXTURE = pygame.image.load("road_texture.png")
-ROAD_TEXTURE = pygame.transform.scale(ROAD_TEXTURE, (TILE_SIZE, TILE_SIZE))
-ENEMY_TEXTURE = pygame.image.load("New Piskel.png").convert_alpha()
-ENEMY_TEXTURE = pygame.transform.scale(ENEMY_TEXTURE, (40, 40))  # Масштабируем текстуру до 40x40
 
 
 # Класс игрока
@@ -131,7 +137,7 @@ class Treasure(pygame.sprite.Sprite):
     def __init__(self, walls, player):
         super().__init__()
         self.image = pygame.Surface((30, 30))
-        self.image.fill(GREEN)
+        self.image = TREASURE_TEXTURE
         self.rect = self.image.get_rect()
         max_distance = 0
         best_position = None
