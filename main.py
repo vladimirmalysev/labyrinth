@@ -70,7 +70,7 @@ MAZE = [
 ]
 
 
-# Класс игрока
+# Игрок
 class Player(pygame.sprite.Sprite):
     def __init__(self, character, x, y):
         super().__init__()
@@ -90,7 +90,7 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_RIGHT]:
             dx = self.speed
 
-        # Проверка столкновений с стенами
+        # Проверка столкновений со стенами
         self.rect.x += dx
         if pygame.sprite.spritecollideany(self, walls):
             self.rect.x -= dx
@@ -100,7 +100,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.y -= dy
 
 
-# Класс обитателя лабиринта
+# Монстр
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, walls):
         super().__init__()
@@ -132,7 +132,7 @@ class Enemy(pygame.sprite.Sprite):
             self.direction = random.choice([(1, 0), (0, 1), (-1, 0), (0, -1)])
 
 
-# Класс сокровища
+# Сокровище
 class Treasure(pygame.sprite.Sprite):
     def __init__(self, walls, player):
         super().__init__()
@@ -154,7 +154,7 @@ class Treasure(pygame.sprite.Sprite):
             self.rect.center = best_position
 
 
-# Класс стены
+# Стены
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -163,7 +163,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect.topleft = (x, y)
 
 
-# Класс звезды
+# Звезды
 class Star(pygame.sprite.Sprite):
     def __init__(self, walls):
         super().__init__()
@@ -179,12 +179,12 @@ class Star(pygame.sprite.Sprite):
                 break
 
 
-# Меню выбора персонажа
+# Выбор персонажа
 def character_selection():
     selected = 0
     while True:
         SCREEN.fill(BLACK)
-        title = FONT.render("Выберите персонажа", True, WHITE)
+        title = FONT.render("Выберите героя", True, WHITE)
         SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
 
         for i, char in enumerate(CHARACTERS):
@@ -209,15 +209,15 @@ def character_selection():
                     return CHARACTERS[selected]
 
 
-# Экран окончания игры
+# Экран окончания
 def end_screen(win, stars_collected):
     while True:
         SCREEN.fill(BLACK)
 
         if win:
-            title = FONT.render("Вы выиграли!", True, WHITE)
+            title = FONT.render("Победа!", True, WHITE)
         else:
-            title = FONT.render("Вы проиграли!", True, WHITE)
+            title = FONT.render("Поражение!", True, WHITE)
 
         SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
 
@@ -226,7 +226,7 @@ def end_screen(win, stars_collected):
             color = YELLOW if i < stars_collected else GRAY
             pygame.draw.circle(SCREEN, color, (WIDTH // 2 - 50 + i * 50, HEIGHT // 2), 20)
 
-        retry_text = FONT.render("Нажмите Enter, чтобы начать заново", True, WHITE)
+        retry_text = FONT.render("Нажмите Enter, чтобы продолжить", True, WHITE)
         SCREEN.blit(retry_text, (WIDTH // 2 - retry_text.get_width() // 2, HEIGHT - 100))
 
         pygame.display.flip()
@@ -240,13 +240,13 @@ def end_screen(win, stars_collected):
                     main()
 
 
-# Основная функция
+# Программа
 def main():
     character = character_selection()
     player = Player(character, TILE_SIZE, TILE_SIZE)
     wall_group = pygame.sprite.Group()
 
-    # Создание стен лабиринта
+    # Создание стен
     for row_index, row in enumerate(MAZE):
         for col_index, cell in enumerate(row):
             if cell == "W":
@@ -306,7 +306,7 @@ def main():
 
         # Затемнение экрана за пределами круга
         shadow = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        shadow.fill((0, 0, 0, 255))  # Полностью черный цвет
+        shadow.fill((0, 0, 0, 250))  # Полностью черный цвет
         pygame.draw.circle(shadow, (0, 0, 0, 0), player.rect.center, 100)
         SCREEN.blit(shadow, (0, 0))
 
