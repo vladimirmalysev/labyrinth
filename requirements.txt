@@ -1,0 +1,9 @@
+bcrypt==4.2.1
+gif_pygame==1.1.2
+pillow==11.1.0
+pygame==2.6.1
+pygame-ce==2.5.2
+PyQt6==6.8.0
+PyQt6-Qt6==6.8.1
+PyQt6_sip==13.10.0
+PyTMX==3.32
