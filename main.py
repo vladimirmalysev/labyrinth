@@ -220,8 +220,8 @@ def end_screen(win, stars_collected):
         else:
             text = FONT.render("Поражение! Нажмите Enter для выбора персонажа", True, WHITE)
             sub_text = FONT.render("Попробуйте еще раз!", True, WHITE)
-        SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2))
-        SCREEN.blit(sub_text, (WIDTH // 2 - sub_text.get_width() // 2, HEIGHT // 2 + 50))
+        SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT - 100))
+        SCREEN.blit(sub_text, (WIDTH // 2 - sub_text.get_width() // 2, HEIGHT - 50))
         pygame.display.flip()
 
         for i in range(3):
@@ -247,17 +247,24 @@ def final_screen(win):
     if win:
         image = PIPES_IMAGE
         text = FONT.render("Победа!", True, WHITE)
+        sub_text = FONT.render("Вы доказали свою силу!", True, WHITE)
     else:
         image = SPEARS_IMAGE
         text = FONT.render("Поражение!", True, WHITE)
+        sub_text = FONT.render("Попробуйте снова и станьте лучше!", True, WHITE)
 
     image = pygame.transform.scale(image, (300, 300))
     SCREEN.blit(image, (WIDTH // 2 - 150, HEIGHT // 2 - 150))
-    SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 180))
+    SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT - 100))
+    SCREEN.blit(sub_text, (WIDTH // 2 - sub_text.get_width() // 2, HEIGHT - 50))
 
     pygame.display.flip()
-    pygame.time.delay(3000)  # Задержка перед выходом в меню выбора персонажа
-    main()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+                pygame.quit()
+                sys.exit()
 
 
 # Программа
