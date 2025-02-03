@@ -41,7 +41,8 @@ PLAYER_TEXTURE3 = pygame.image.load("player3(moustache).png")
 PLAYER_TEXTURE3 = pygame.transform.scale(PLAYER_TEXTURE3, (40, 40))
 TREASURE_TEXTURE = pygame.image.load("treasure.png").convert_alpha()
 TREASURE_TEXTURE = pygame.transform.scale(TREASURE_TEXTURE, (40, 40))
-
+PIPES_IMAGE = pygame.image.load("pipes.png")  # Перекрещенные трубы
+SPEARS_IMAGE = pygame.image.load("spears.jpg")  # Перекрещенные копья
 # Спрайты персонажей
 CHARACTERS = [
     pygame.Surface((40, 40)),
@@ -209,25 +210,23 @@ def character_selection():
                     return CHARACTERS[selected]
 
 
-# Экран окончания
+# Экран окончания\
 def end_screen(win, stars_collected):
     while True:
         SCREEN.fill(BLACK)
-
         if win:
-            title = FONT.render("Победа!", True, WHITE)
+            text = FONT.render("Победа! Нажмите Enter для финального экрана", True, WHITE)
+            sub_text = FONT.render("Вы прошли испытание!", True, WHITE)
         else:
-            title = FONT.render("Поражение!", True, WHITE)
+            text = FONT.render("Поражение! Нажмите Enter для выбора персонажа", True, WHITE)
+            sub_text = FONT.render("Попробуйте еще раз!", True, WHITE)
+        SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2))
+        SCREEN.blit(sub_text, (WIDTH // 2 - sub_text.get_width() // 2, HEIGHT // 2 + 50))
+        pygame.display.flip()
 
-        SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
-
-        # Рисуем звезды
         for i in range(3):
             color = YELLOW if i < stars_collected else GRAY
             pygame.draw.circle(SCREEN, color, (WIDTH // 2 - 50 + i * 50, HEIGHT // 2), 20)
-
-        retry_text = FONT.render("Нажмите Enter, чтобы продолжить", True, WHITE)
-        SCREEN.blit(retry_text, (WIDTH // 2 - retry_text.get_width() // 2, HEIGHT - 100))
 
         pygame.display.flip()
 
@@ -237,7 +236,28 @@ def end_screen(win, stars_collected):
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
-                    main()
+                    if win:
+                        final_screen(win)
+                    else:
+                        main()
+
+
+def final_screen(win):
+    SCREEN.fill(BLACK)
+    if win:
+        image = PIPES_IMAGE
+        text = FONT.render("Победа!", True, WHITE)
+    else:
+        image = SPEARS_IMAGE
+        text = FONT.render("Поражение!", True, WHITE)
+
+    image = pygame.transform.scale(image, (300, 300))
+    SCREEN.blit(image, (WIDTH // 2 - 150, HEIGHT // 2 - 150))
+    SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 180))
+
+    pygame.display.flip()
+    pygame.time.delay(3000)  # Задержка перед выходом в меню выбора персонажа
+    main()
 
 
 # Программа
@@ -306,7 +326,7 @@ def main():
 
         # Затемнение экрана за пределами круга
         shadow = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        shadow.fill((0, 0, 0, 250))  # Полностью черный цвет
+        shadow.fill((0, 0, 0, 0))  # Полностью черный цвет
         pygame.draw.circle(shadow, (0, 0, 0, 0), player.rect.center, 100)
         SCREEN.blit(shadow, (0, 0))
 
