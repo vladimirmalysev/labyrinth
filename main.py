@@ -1,176 +1,348 @@
 import pygame
-import os
+import random
 import sys
+import math
 
-
-def load_image(name, color_key=None):
-    fullname = os.path.join('data', name)
-    try:
-        image = pygame.image.load(fullname).convert()
-    except pygame.error as mes:
-        print(f'Не могу загрузить файл: {name}')
-        print(mes)
-        return
-    if color_key is not None:
-        image = image.convert()
-        if color_key == -1:
-            color_key = image.get_at((0, 0))
-        image.set_colorkey(color_key)
-    else:
-        image = image.convert_alpha()
-    return image
-
-
+# Инициализация pygame
 pygame.init()
-size = w, h = (500, 500)
-screen = pygame.display.set_mode(size)
-FPS = 50
-print('Введите название уровня:')
-m = input()
 
-images = {'wall': load_image('wall.png'),
-          'empty': load_image('floor.png')}
-hero_image = load_image('mar.png')
+# Размеры окна
+WIDTH, HEIGHT = 1050, 650
+SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Лабиринт")
 
-tile_width = tile_height = 50
+# Цвета
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
+GRAY = (169, 169, 169)
 
-# основной персонаж
-player = None
-
-# группы спрайтов
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-
-
-class Tile(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(tiles_group, all_sprites)
-        self.image = images[tile_type]
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
-
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
-        super().__init__(player_group, all_sprites)
-        self.image = hero_image
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x + 15, tile_height * pos_y + 5)
-        self.pos = pos_x, pos_y
-
-    def move(self, pos_x, pos_y):
-        self.pos = pos_x, pos_y
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x + 15, tile_height * pos_y + 5)
-
-
-def load_level(filename):
-    filename = "data/" + filename
-    # читаем уровень, убирая символы перевода строки
-    with open(filename, 'r') as mapFile:
-        level_map = [line.strip() for line in mapFile]
-
-    # и подсчитываем максимальную длину
-    max_width = max(map(len, level_map))
-
-    # дополняем каждую строку пустыми клетками ('.')
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
-
-
-def generate_level(level):
-    new_player, x, y = None, None, None
-    for y in range(len(level)):
-        for x in range(len(level[y])):
-            if level[y][x] == '.':
-                Tile('empty', x, y)
-            elif level[y][x] == '#':
-                Tile('wall', x, y)
-            elif level[y][x] == '@':
-                Tile('empty', x, y)
-                new_player = Player(x, y)
-    # вернем игрока, а также размер поля в клетках
-    return new_player, x, y
-
-
+# Кадровая частота
+FPS = 60
 clock = pygame.time.Clock()
+TILE_SIZE = 50
+# Шрифты
+FONT = pygame.font.Font(None, 36)
+# Загрузка текстур
+WALL_TEXTURE = pygame.image.load("wall_texture.png")
+WALL_TEXTURE = pygame.transform.scale(WALL_TEXTURE, (TILE_SIZE, TILE_SIZE))
+ROAD_TEXTURE = pygame.image.load("road_texture.png")
+ROAD_TEXTURE = pygame.transform.scale(ROAD_TEXTURE, (TILE_SIZE, TILE_SIZE))
+ENEMY_TEXTURE = pygame.image.load("monster.png").convert_alpha()
+ENEMY_TEXTURE = pygame.transform.scale(ENEMY_TEXTURE, (40, 40))  # Масштабируем текстуру до 40x40
+PLAYER_TEXTURE1 = pygame.image.load("player1.png")
+PLAYER_TEXTURE1 = pygame.transform.scale(PLAYER_TEXTURE1, (40, 40))
+PLAYER_TEXTURE2 = pygame.image.load("player2(robin).png")
+PLAYER_TEXTURE2 = pygame.transform.scale(PLAYER_TEXTURE2, (40, 40))
+PLAYER_TEXTURE3 = pygame.image.load("player3(moustache).png")
+PLAYER_TEXTURE3 = pygame.transform.scale(PLAYER_TEXTURE3, (40, 40))
+TREASURE_TEXTURE = pygame.image.load("treasure.png").convert_alpha()
+TREASURE_TEXTURE = pygame.transform.scale(TREASURE_TEXTURE, (40, 40))
+PIPES_IMAGE = pygame.image.load("pipes.png")  # Перекрещенные трубы
+SPEARS_IMAGE = pygame.image.load("spears.jpg")  # Перекрещенные копья
+# Спрайты персонажей
+CHARACTERS = [
+    pygame.Surface((40, 40)),
+    pygame.Surface((40, 40)),
+    pygame.Surface((40, 40))
+]
+CHARACTERS[0] = PLAYER_TEXTURE1
+CHARACTERS[1] = PLAYER_TEXTURE2
+CHARACTERS[2] = PLAYER_TEXTURE3
+
+# Лабиринт
+MAZE = [
+    "WWWWWWWWWWWWWWWWWWWWW",
+    "W     W       W     W",
+    "W WWW WWWWW W W WWW W",
+    "W W         W W W   W",
+    "W W WWWWWWW WWW W WWW",
+    "W W       W     W   W",
+    "W WWWWW W W WWWWW W W",
+    "W     W W W     W W W",
+    "WWW W W WWWWW W W W W",
+    "W   W W     W W   W W",
+    "W WWWWWWW W W WWWWW W",
+    "W         W W       W",
+    "WWWWWWWWWWWWWWWWWWWWW"
+]
 
 
-def terminate():
-    pygame.quit()
-    sys.exit()
+# Игрок
+class Player(pygame.sprite.Sprite):
+    def __init__(self, character, x, y):
+        super().__init__()
+        self.image = character
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.speed = 5
+
+    def update(self, keys, walls):
+        dx, dy = 0, 0
+        if keys[pygame.K_UP]:
+            dy = -self.speed
+        if keys[pygame.K_DOWN]:
+            dy = self.speed
+        if keys[pygame.K_LEFT]:
+            dx = -self.speed
+        if keys[pygame.K_RIGHT]:
+            dx = self.speed
+
+        # Проверка столкновений со стенами
+        self.rect.x += dx
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.x -= dx
+
+        self.rect.y += dy
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.y -= dy
 
 
-def start_screen():
-    intro_text = ["ЗАСТАВКА", "",
-                  "Правила игры",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]
+# Монстр
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, walls):
+        super().__init__()
+        self.image = ENEMY_TEXTURE  # Используем текстуру для врага
+        self.rect = self.image.get_rect()
+        while True:
+            self.rect.topleft = (
+                random.randint(0, WIDTH // TILE_SIZE - 1) * TILE_SIZE,
+                random.randint(0, HEIGHT // TILE_SIZE - 1) * TILE_SIZE
+            )
+            if not pygame.sprite.spritecollideany(self, walls):
+                break
+        self.direction = random.choice([(1, 0), (0, 1), (-1, 0), (0, -1)])
 
-    fon = pygame.transform.scale(load_image('fon.jpg'), (w, h))
-    screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 50
-    for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('black'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+    def update(self, walls):
+        dx, dy = self.direction[0] * 2, self.direction[1] * 2
+        self.rect.x += dx
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.x -= dx
+            self.direction = random.choice([(1, 0), (0, 1), (-1, 0), (0, -1)])
+
+        self.rect.y += dy
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.y -= dy
+            self.direction = random.choice([(1, 0), (0, 1), (-1, 0), (0, -1)])
+
+        # Простая логика изменения направления
+        if random.random() < 0.02:
+            self.direction = random.choice([(1, 0), (0, 1), (-1, 0), (0, -1)])
+
+
+# Сокровище
+class Treasure(pygame.sprite.Sprite):
+    def __init__(self, walls, player):
+        super().__init__()
+        self.image = pygame.Surface((30, 30))
+        self.image = TREASURE_TEXTURE
+        self.rect = self.image.get_rect()
+        max_distance = 0
+        best_position = None
+        for _ in range(100):  # Попробуем 100 случайных мест
+            x = random.randint(0, WIDTH // TILE_SIZE - 1) * TILE_SIZE + TILE_SIZE // 2
+            y = random.randint(0, HEIGHT // TILE_SIZE - 1) * TILE_SIZE + TILE_SIZE // 2
+            self.rect.center = (x, y)
+            if not pygame.sprite.spritecollideany(self, walls):
+                distance = math.sqrt((x - player.rect.x) ** 2 + (y - player.rect.y) ** 2)
+                if distance > max_distance:
+                    max_distance = distance
+                    best_position = (x, y)
+        if best_position:
+            self.rect.center = best_position
+
+
+# Стены
+class Wall(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = WALL_TEXTURE
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+
+
+# Звезды
+class Star(pygame.sprite.Sprite):
+    def __init__(self, walls):
+        super().__init__()
+        self.image = pygame.Surface((20, 20))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        while True:
+            self.rect.topleft = (
+                random.randint(0, WIDTH // TILE_SIZE - 1) * TILE_SIZE + TILE_SIZE // 4,
+                random.randint(0, HEIGHT // TILE_SIZE - 1) * TILE_SIZE + TILE_SIZE // 4
+            )
+            if not pygame.sprite.spritecollideany(self, walls):
+                break
+
+
+# Выбор персонажа
+def character_selection():
+    selected = 0
+    while True:
+        SCREEN.fill(BLACK)
+        title = FONT.render("Выберите героя", True, WHITE)
+        SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
+
+        for i, char in enumerate(CHARACTERS):
+            x = WIDTH // 2 - (len(CHARACTERS) * 50) // 2 + i * 60
+            y = HEIGHT // 2
+            SCREEN.blit(char, (x, y))
+            if i == selected:
+                pygame.draw.rect(SCREEN, WHITE, (x - 5, y - 5, 50, 50), 2)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    selected = (selected - 1) % len(CHARACTERS)
+                if event.key == pygame.K_RIGHT:
+                    selected = (selected + 1) % len(CHARACTERS)
+                if event.key == pygame.K_RETURN:
+                    return CHARACTERS[selected]
+
+
+# Экран окончания\
+def end_screen(win, stars_collected):
+    while True:
+        SCREEN.fill(BLACK)
+        if win:
+            text = FONT.render("Победа! Нажмите Enter для финального экрана", True, WHITE)
+            sub_text = FONT.render("Вы прошли испытание!", True, WHITE)
+        else:
+            text = FONT.render("Поражение! Нажмите Enter для выбора персонажа", True, WHITE)
+            sub_text = FONT.render("Попробуйте еще раз!", True, WHITE)
+        SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT - 100))
+        SCREEN.blit(sub_text, (WIDTH // 2 - sub_text.get_width() // 2, HEIGHT - 50))
+        pygame.display.flip()
+
+        for i in range(3):
+            color = YELLOW if i < stars_collected else GRAY
+            pygame.draw.circle(SCREEN, color, (WIDTH // 2 - 50 + i * 50, HEIGHT // 2), 20)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    if win:
+                        final_screen(win)
+                    else:
+                        main()
+
+
+def final_screen(win):
+    SCREEN.fill(BLACK)
+    if win:
+        image = PIPES_IMAGE
+        text = FONT.render("Победа!", True, WHITE)
+        sub_text = FONT.render("Вы доказали свою силу!", True, WHITE)
+    else:
+        image = SPEARS_IMAGE
+        text = FONT.render("Поражение!", True, WHITE)
+        sub_text = FONT.render("Попробуйте снова и станьте лучше!", True, WHITE)
+
+    image = pygame.transform.scale(image, (300, 300))
+    SCREEN.blit(image, (WIDTH // 2 - 150, HEIGHT // 2 - 150))
+    SCREEN.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT - 100))
+    SCREEN.blit(sub_text, (WIDTH // 2 - sub_text.get_width() // 2, HEIGHT - 50))
+
+    pygame.display.flip()
 
     while True:
         for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+                pygame.quit()
+                sys.exit()
+
+
+# Программа\
+def main():
+    character = character_selection()
+    player = Player(character, TILE_SIZE, TILE_SIZE)
+    wall_group = pygame.sprite.Group()
+
+    # Создание стен
+    for row_index, row in enumerate(MAZE):
+        for col_index, cell in enumerate(row):
+            if cell == "W":
+                wall = Wall(col_index * TILE_SIZE, row_index * TILE_SIZE)
+                wall_group.add(wall)
+
+    enemy = Enemy(wall_group)
+    treasure = Treasure(wall_group, player)
+
+    stars = pygame.sprite.Group()
+    for _ in range(3):
+        stars.add(Star(wall_group))
+
+    player_group = pygame.sprite.Group(player)
+    enemy_group = pygame.sprite.Group(enemy)
+    treasure_group = pygame.sprite.Group(treasure)
+
+    running = True
+    stars_collected = 0
+
+    while running:
+        SCREEN.fill(BLACK)
+
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+                running = False
+
+        keys = pygame.key.get_pressed()
+        player.update(keys, wall_group)
+        enemy_group.update(wall_group)
+
+        # Рисуем лабиринт
+        for row_index, row in enumerate(MAZE):
+            for col_index, cell in enumerate(row):
+                x = col_index * TILE_SIZE
+                y = row_index * TILE_SIZE
+                if cell == "W":
+                    SCREEN.blit(WALL_TEXTURE, (x, y))
+                else:
+                    SCREEN.blit(ROAD_TEXTURE, (x, y))
+
+        player_group.draw(SCREEN)
+        enemy_group.draw(SCREEN)
+        treasure_group.draw(SCREEN)
+        stars.draw(SCREEN)
+
+        # Проверка столкновений
+        if pygame.sprite.spritecollide(player, enemy_group, False):
+            end_screen(False, stars_collected)
+            running = False
+        if pygame.sprite.spritecollide(player, treasure_group, True):
+            end_screen(True, stars_collected)
+            running = False
+
+        collected_stars = pygame.sprite.spritecollide(player, stars, True)
+        stars_collected += len(collected_stars)
+
+        # Затемнение экрана за пределами круга
+        shadow = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        shadow.fill((0, 0, 0, 0))  # Полностью черный цвет
+        pygame.draw.circle(shadow, (0, 0, 0, 0), player.rect.center, 100)
+        SCREEN.blit(shadow, (0, 0))
+
         pygame.display.flip()
         clock.tick(FPS)
 
-
-level_map = load_level(m)
-max_x = len(level_map)
-max_y = len(level_map[0])
+    pygame.quit()
 
 
-def move(hero, movement):
-    x, y = hero.pos
-    if movement == 'up':
-        if y > 0 and level_map[y - 1][x] == '.':
-            hero.move(x, y - 1)
-    elif movement == 'down':
-        if y < max_y - 1 and level_map[y + 1][x] == '.':
-            hero.move(x, y + 1)
-    elif movement == 'right':
-        if x < max_x - 1 and level_map[y][x + 1] == '.':
-            hero.move(x + 1, y)
-    elif movement == 'left':
-        if x > 0 and level_map[y][x - 1] == '.':
-            hero.move(x - 1, y)
+if __name__ == "__main__":
+    main()
 
-
-start_screen()
-hero, x, y = generate_level(level_map)
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                move(hero, 'up')
-            elif event.key == pygame.K_DOWN:
-                move(hero, 'down')
-            elif event.key == pygame.K_RIGHT:
-                move(hero, 'right')
-            elif event.key == pygame.K_LEFT:
-                move(hero, 'left')
-    screen.fill('black')
-    tiles_group.draw(screen)
-    player_group.draw(screen)
-    clock.tick(FPS)
-    pygame.display.flip()
-terminate()
