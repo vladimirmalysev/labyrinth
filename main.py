@@ -267,7 +267,7 @@ def final_screen(win):
                 sys.exit()
 
 
-# Программа
+# Программа\
 def main():
     character = character_selection()
     player = Player(character, TILE_SIZE, TILE_SIZE)
