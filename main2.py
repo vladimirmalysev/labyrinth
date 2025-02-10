@@ -5,71 +5,80 @@ import random
 import sys
 import math
 
-# Инициализация pygame
-pygame.init()
+from main3 import Game
 
-# Размеры окна
-WIDTH, HEIGHT = 1050, 650
-SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Лабиринт")
 
-# Цвета
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-YELLOW = (255, 255, 0)
-GRAY = (169, 169, 169)
+def init():
+    global WIDTH, HEIGHT, SCREEN, clock, FPS, FONT
+    global WHITE, BLACK, RED, BLUE, GREEN, YELLOW, GRAY
+    global TILE_SIZE, WALL_TEXTURE, ROAD_TEXTURE, ENEMY_TEXTURE, PLAYER_TEXTURE1, PLAYER_TEXTURE2, PLAYER_TEXTURE3
+    global TREASURE_TEXTURE, CHARACTERS, MAZE
 
-# Кадровая частота
-FPS = 30
-clock = pygame.time.Clock()
-TILE_SIZE = 50
-# Шрифты
-FONT = pygame.font.Font(None, 36)
-# Загрузка текстур
-WALL_TEXTURE = pygame.image.load("data/wall_texture.png")
-WALL_TEXTURE = pygame.transform.scale(WALL_TEXTURE, (TILE_SIZE, TILE_SIZE))
-ROAD_TEXTURE = pygame.image.load("data/road_texture.png")
-ROAD_TEXTURE = pygame.transform.scale(ROAD_TEXTURE, (TILE_SIZE, TILE_SIZE))
-ENEMY_TEXTURE = pygame.image.load("data/monster.png").convert_alpha()
-ENEMY_TEXTURE = pygame.transform.scale(ENEMY_TEXTURE, (40, 40))  # Масштабируем текстуру до 40x40
-PLAYER_TEXTURE1 = pygame.image.load("data/player1.png")
-PLAYER_TEXTURE1 = pygame.transform.scale(PLAYER_TEXTURE1, (40, 40))
-PLAYER_TEXTURE2 = pygame.image.load("data/player2(robin).png")
-PLAYER_TEXTURE2 = pygame.transform.scale(PLAYER_TEXTURE2, (40, 40))
-PLAYER_TEXTURE3 = pygame.image.load("data/player3(moustache).png")
-PLAYER_TEXTURE3 = pygame.transform.scale(PLAYER_TEXTURE3, (40, 40))
-TREASURE_TEXTURE = pygame.image.load("data/treasure.png").convert_alpha()
-TREASURE_TEXTURE = pygame.transform.scale(TREASURE_TEXTURE, (40, 40))
+    # Инициализация pygame
+    pygame.init()
 
-# Спрайты персонажей
-CHARACTERS = [
-    pygame.Surface((40, 40)),
-    pygame.Surface((40, 40)),
-    pygame.Surface((40, 40))
-]
-CHARACTERS[0] = PLAYER_TEXTURE1
-CHARACTERS[1] = PLAYER_TEXTURE2
-CHARACTERS[2] = PLAYER_TEXTURE3
+    # Размеры окна
+    WIDTH, HEIGHT = 1050, 650
+    SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Лабиринт")
 
-# Лабиринт
-MAZE = [
-    "WWWWWWWWWWWWWWWWWWWWW",
-    "W     W       W     W",
-    "W WWW WWWWW W W WWW W",
-    "W W         W W W   W",
-    "W W WWWWWWW WWW W WWW",
-    "W W       W     W   W",
-    "W WWWWW W W WWWWW W W",
-    "W     W W W     W W W",
-    "WWW W W WWWWW W W W W",
-    "W   W W     W W   W W",
-    "W WWWWWWW W W WWWWW W",
-    "W         W W       W",
-    "WWWWWWWWWWWWWWWWWWWWW"
-]
+    # Цвета
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    RED = (255, 0, 0)
+    BLUE = (0, 0, 255)
+    GREEN = (0, 255, 0)
+    YELLOW = (255, 255, 0)
+    GRAY = (169, 169, 169)
+
+    # Кадровая частота
+    FPS = 30
+    clock = pygame.time.Clock()
+    TILE_SIZE = 50
+    # Шрифты
+    FONT = pygame.font.Font(None, 36)
+    # Загрузка текстур
+    WALL_TEXTURE = pygame.image.load("data/wall_texture.png")
+    WALL_TEXTURE = pygame.transform.scale(WALL_TEXTURE, (TILE_SIZE, TILE_SIZE))
+    ROAD_TEXTURE = pygame.image.load("data/road_texture.png")
+    ROAD_TEXTURE = pygame.transform.scale(ROAD_TEXTURE, (TILE_SIZE, TILE_SIZE))
+    ENEMY_TEXTURE = pygame.image.load("data/monster.png").convert_alpha()
+    ENEMY_TEXTURE = pygame.transform.scale(ENEMY_TEXTURE, (40, 40))  # Масштабируем текстуру до 40x40
+    PLAYER_TEXTURE1 = pygame.image.load("data/player1.png")
+    PLAYER_TEXTURE1 = pygame.transform.scale(PLAYER_TEXTURE1, (40, 40))
+    PLAYER_TEXTURE2 = pygame.image.load("data/player2(robin).png")
+    PLAYER_TEXTURE2 = pygame.transform.scale(PLAYER_TEXTURE2, (40, 40))
+    PLAYER_TEXTURE3 = pygame.image.load("data/player3(moustache).png")
+    PLAYER_TEXTURE3 = pygame.transform.scale(PLAYER_TEXTURE3, (40, 40))
+    TREASURE_TEXTURE = pygame.image.load("data/treasure.png").convert_alpha()
+    TREASURE_TEXTURE = pygame.transform.scale(TREASURE_TEXTURE, (40, 40))
+
+    # Спрайты персонажей
+    CHARACTERS = [
+        pygame.Surface((40, 40)),
+        pygame.Surface((40, 40)),
+        pygame.Surface((40, 40))
+    ]
+    CHARACTERS[0] = PLAYER_TEXTURE1
+    CHARACTERS[1] = PLAYER_TEXTURE2
+    CHARACTERS[2] = PLAYER_TEXTURE3
+
+    # Лабиринт
+    MAZE = [
+        "WWWWWWWWWWWWWWWWWWWWW",
+        "W     W       W     W",
+        "W WWW WWWWW W W WWW W",
+        "W W         W W W   W",
+        "W W WWWWWWW WWW W WWW",
+        "W W       W     W   W",
+        "W WWWWW W W WWWWW W W",
+        "W     W W W     W W W",
+        "WWW W W WWWWW W W W W",
+        "W   W W     W W   W W",
+        "W WWWWWWW W W WWWWW W",
+        "W         W W       W",
+        "WWWWWWWWWWWWWWWWWWWWW"
+    ]
 
 
 # Класс игрока
@@ -253,7 +262,9 @@ def end_screen(stars_collected):
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
-                    subprocess.run(['python', 'main3.py'])
+                    pygame.display.quit()
+                    new_game = Game()
+                    new_game.run()
                     quit()
 
 
@@ -281,11 +292,12 @@ def screen(stars_collected):
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
-                    main()
+                    game()
 
 
 # Основная функция
-def main():
+def game():
+    init()
     character = Player.image
     player = Player(character, TILE_SIZE, TILE_SIZE)
     wall_group = pygame.sprite.Group()
@@ -358,7 +370,3 @@ def main():
         clock.tick(FPS)
 
     pygame.quit()
-
-
-if __name__ == '__main__':
-    sys.exit(main())

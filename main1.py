@@ -1,15 +1,8 @@
-import subprocess
-
 import pygame
 import os
-import sys
 import gif_pygame
 
-from collections import deque
-import pygame
-import random
 import sys
-import math
 
 import sqlite3
 import bcrypt
@@ -19,6 +12,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap, QFont
 from PyQt6.QtCore import Qt
+
+from main2 import game
 
 DB_NAME = "task_manager.db"
 
@@ -278,18 +273,6 @@ class Player(pygame.sprite.Sprite):
             self.down = False
 
 
-class Block(pygame.sprite.Sprite):
-    def __init__(self, walls):
-        super().__init__()
-        self.image = pygame.Surface((20, 20))
-        # self.image =
-        self.rect = self.image.get_rect()
-        while True:
-
-            if not pygame.sprite.spritecollideany(self, walls):
-                break
-
-
 def load_level(filename):
     filename = "data/" + filename
     # читаем уровень, убирая символы перевода строки
@@ -366,7 +349,8 @@ def start_screen1():
             if event.type == pygame.QUIT:
                 terminate()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                subprocess.run(['python', 'main2.py'])
+                # subprocess.run(['python', 'main2.py'])
+                game()
                 quit()
         pygame.display.flip()
         clock.tick(FPS)
@@ -418,7 +402,8 @@ def move(hero, movement):
 
 
 def game1():
-    global camera, fon, hero, tile_width, tile_height, tiles_group, screen, all_sprites, images, player_group, win_group, FPS
+    global camera, fon, hero, tile_width, tile_height, tiles_group, screen, all_sprites, images, player_group
+    global win_group, FPS
     pygame.init()
     size = w, h = (400, 400)
     screen = pygame.display.set_mode(size)

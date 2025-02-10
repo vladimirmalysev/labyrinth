@@ -150,9 +150,11 @@ class Game:
         pygame.init()
         infoobject = pygame.display.Info()
         self.WIDTH, self.HEIGHT = infoobject.current_w, infoobject.current_h
+        print(self.WIDTH, self.HEIGHT)
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption("Снежный лабиринт")
         self.CELL_SIZE = min(self.WIDTH // (MAZE_WIDTH // 3), self.HEIGHT // (MAZE_HEIGHT // 3))
+        print(self.CELL_SIZE)
         self.clock = pygame.time.Clock()
         self.hero = Hero(1, 1)
         self.monster = Monster(MAZE_WIDTH - 2, MAZE_HEIGHT - 2)
